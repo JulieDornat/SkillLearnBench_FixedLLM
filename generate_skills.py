@@ -58,6 +58,10 @@ _PROVIDER_PING = {
         "https://api.openai.com/v1/models",
         {"Authorization": "Bearer {key}"},
     ),
+    "GROQ_API_KEY": (
+        "https://api.groq.com/openai/v1/models",
+        {"Authorization": "Bearer {key}"},
+    ),
     "GEMINI_API_KEY": (
         "https://generativelanguage.googleapis.com/v1beta/models?key={key}&pageSize=1",
         {},
@@ -279,6 +283,7 @@ MODEL_AGENT: dict[str, str] = {
     "gemini-3.1-flash-lite": "gemini-code",
     "gemini-3-flash-preview": "gemini-code",
     "gemini-3.1-pro-preview": "gemini-code",
+    "gemini-3.5-flash-lite": "gemini-code",
 }
 
 
@@ -312,7 +317,7 @@ def _check_api_key(provider: str) -> tuple[bool, str]:
             from google.genai import types as _gtypes
             _client = _genai.Client(api_key=key)
             _client.models.generate_content(
-                model="gemini-2.0-flash",
+                model="gemini-3.5-flash-lite",
                 contents="hi",
                 config=_gtypes.GenerateContentConfig(max_output_tokens=1),
             )

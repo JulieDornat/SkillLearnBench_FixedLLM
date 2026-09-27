@@ -167,38 +167,57 @@ def _get_provider() -> Literal["openai", ""]:
         return "openai"
     return ""
 
+def get_provider() -> str:
+    """Return 'openai', 'anthropic', or '' based on available API keys."""
+    if os.environ.get("GROQ_API_KEY"):
+        return "groq"
+    if os.environ.get("OPENAI_API_KEY"):
+        return "openai"
+    if os.environ.get("ANTHROPIC_API_KEY"):
+        return "anthropic"
+    return ""
 
 def _call_llm(prompt: str, model: str, stream_output: bool = True) -> str:
-    provider = _get_provider()
-    if provider == "openai":
+    provider = get_provider()
+    if provider == "groq":
+        try:
+            from openai import OpenAI
+        except ImportError as exc:
+            raise RuntimeError("openai client not installed") from exc
+        client = OpenAI(
+            api_key=os.environ["GROQ_API_KEY"],
+            base_url="https://api.groq.com/openai/v1",
+        )
+    elif provider == "openai":
         try:
             from openai import OpenAI
         except ImportError as exc:
             raise RuntimeError("openai client not installed") from exc
         client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
-        try:
-            response = client.responses.create(
-                model=model,
-                input=prompt,
-                reasoning_effort="low",
-            )
-        except TypeError as exc:
-            if "reasoning_effort" not in str(exc):
-                raise
-            response = client.responses.create(
-                model=model,
-                input=prompt,
-            )
-        print("=================")
-        print(response)
-        print("=================")
-        output_text = (response.output_text or "").strip()
-        if stream_output and output_text:
-            print(output_text)
-        if not output_text:
-            raise RuntimeError("model returned empty output_text")
-        return output_text
-    raise RuntimeError("No API key found (set OPENAI_API_KEY)")
+    else:
+        raise RuntimeError("No API key found (set OPENAI_API_KEY)")
+    try:
+        response = client.responses.create(
+            model=model,
+            input=prompt,
+            reasoning_effort="low",
+        )
+    except TypeError as exc:
+        if "reasoning_effort" not in str(exc):
+            raise
+        response = client.responses.create(
+            model=model,
+            input=prompt,
+        )
+    print("=================")
+    print(response)
+    print("=================")
+    output_text = (response.output_text or "").strip()
+    if stream_output and output_text:
+        print(output_text)
+    if not output_text:
+        raise RuntimeError("model returned empty output_text")
+    return output_text
 
 
 def _extract_json_list(text: str) -> list[dict]:
@@ -262,7 +281,7 @@ def main() -> int:
         help="Output JSON path; default: trials/human_authored/<task-id>/skill-key-points.generated.json",
     )
     parser.add_argument("--raw-output", type=Path, help="Optional raw model text output path")
-    parser.add_argument("--model", default="gpt-5-mini")
+    parser.add_argument("--model", default="openai/gpt-oss-120b")
     parser.add_argument(
         "--print-llm-input",
         action="store_true",

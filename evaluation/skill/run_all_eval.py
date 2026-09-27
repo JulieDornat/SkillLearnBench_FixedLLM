@@ -311,8 +311,8 @@ def main():
     ap.add_argument(
         "--max-api",
         type=int,
-        default=5,
-        help="Max concurrent API-calling subprocesses (default 5)",
+        default=1,
+        help="Max concurrent API-calling subprocesses (default 1)",
     )
     ap.add_argument(
         "--max-convert",

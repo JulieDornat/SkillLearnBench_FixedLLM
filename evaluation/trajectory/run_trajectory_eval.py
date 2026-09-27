@@ -532,7 +532,14 @@ async def _run_all(
     provider = _llm.get_provider()
     client: Any = None
     semaphore: asyncio.Semaphore | None = None
-    if provider == "openai":
+    if provider == "groq":
+        from openai import AsyncOpenAI
+        client = AsyncOpenAI(
+            api_key=os.environ["GROQ_API_KEY"],
+            base_url="https://api.groq.com/openai/v1",
+        )
+        semaphore = asyncio.Semaphore(25)
+    elif provider == "openai":
         from openai import AsyncOpenAI
         client = AsyncOpenAI(api_key=os.environ["OPENAI_API_KEY"])
         semaphore = asyncio.Semaphore(100)
@@ -681,6 +688,8 @@ def main() -> int:
     config = args.config
     trials_root = args.trials_root.resolve() if args.trials_root else (_GEN_DIR / "output" / "evaluation_log")
     results_root = args.results_root.resolve() if args.results_root else (_GEN_DIR / "output" / "evaluation_reports")
+
+    print(args.model)
 
     subtasks = _find_subtasks(trials_root, task_name, config)
     if not subtasks:

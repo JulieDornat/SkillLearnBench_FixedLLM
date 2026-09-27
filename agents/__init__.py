@@ -49,7 +49,7 @@ AGENTS: dict[str, dict] = {
     },
     "gemini-code": {
         "name": "Gemini Code (Google)",
-        "env": ["GEMINI_API_KEY"],
+        "env": ["GEMINI_API_KEY", "GEMINI_CLI_TRUST_WORKSPACE"],
         "runtime_deps": _NODE_BOOTSTRAP,
         "install": "npm install -g @google/gemini-cli",
         "run": 'gemini --yolo --output-format stream-json --model {model} -p "$(cat {instruction_file})"',
@@ -57,6 +57,7 @@ AGENTS: dict[str, dict] = {
         "trajectory_tee": "/logs/agent/gemini-code.txt",
         "default_model": "gemini-3.1-flash-lite",
     },
+    
 }
 
 

@@ -295,11 +295,15 @@ async def _run_async(
     task_intro: str,
     skill_blobs: dict[str, str],
 ) -> tuple[dict[str, Any], dict[str, str]]:
-    api_key = os.environ.get("OPENAI_API_KEY")
-    if not api_key:
-        raise RuntimeError("No API key found (set OPENAI_API_KEY)")
-
-    client = AsyncOpenAI(api_key=api_key)
+    if os.environ.get("GROQ_API_KEY"):
+        client = AsyncOpenAI(
+            api_key=os.environ["GROQ_API_KEY"],
+            base_url="https://api.groq.com/openai/v1",
+        )
+    elif os.environ.get("OPENAI_API_KEY"):
+        client = AsyncOpenAI(api_key=os.environ["OPENAI_API_KEY"])
+    else:
+        raise RuntimeError("No API key found (set OPENAI_API_KEY or GROQ_API_KEY)")
     semaphore = asyncio.Semaphore(8)
     try:
         tasks = [
@@ -330,7 +334,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Compute safety risk metrics for all skill configs")
     parser.add_argument("--task-id", required=True)
     parser.add_argument("--generated-root", type=Path, help="Explicit skill root to evaluate; default: all config dirs under --skill-configs-dir.")
-    parser.add_argument("--model", default="gpt-5-mini")
+    parser.add_argument("--model", default="openai/gpt-oss-120b")
     parser.add_argument("--output", type=Path, help="Default: results/<task-id>/safety.metrics.json")
     parser.add_argument("--raw-dir", type=Path, help="Optional dir for raw model outputs per skill")
     parser.add_argument("--task-dir", type=Path, help="Override task directory (contains instruction.md)")

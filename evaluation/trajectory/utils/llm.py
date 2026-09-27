@@ -42,6 +42,8 @@ def load_env() -> None:
 
 def get_provider() -> str:
     """Return 'openai', 'anthropic', or '' based on available API keys."""
+    if os.environ.get("GROQ_API_KEY"):
+        return "groq"
     if os.environ.get("OPENAI_API_KEY"):
         return "openai"
     if os.environ.get("ANTHROPIC_API_KEY"):

@@ -5,7 +5,7 @@ Parallel Docker eval runner with per-task image reuse and live progress display.
 Phase 1 – Pre-build: one Docker image per *task* (empty skills dir).
           Skips build if stable tag already exists locally.
 Phase 2 – Run: all trials in parallel with two-level rich progress display.
-          run_task() injects skills at runtime → same container state as baking.
+          run_task() injects skills at runtime -> same container state as baking.
 Phase 3 – Cleanup: remove stable images only if --remove-images is passed.
           Default: keep images for reuse across runs.
 
@@ -253,7 +253,7 @@ class ApiQpsMonitor:
         self._trials_dir = trials_dir
         self._run_start  = run_start       # wall-clock time; ignore older files
         self._lock        = threading.Lock()
-        self._file_offset: dict[Path, int]  = {}   # file → lines already counted
+        self._file_offset: dict[Path, int]  = {}   # file -> lines already counted
         self._call_times:  list[float]      = []   # monotonic timestamps of API calls
         self._stop        = threading.Event()
         self._thread      = threading.Thread(
@@ -314,7 +314,7 @@ class ApiQpsMonitor:
 # ── Helpers ────────────────────────────────────────────────────────────────────
 
 def _task_name(task_id: str) -> str:
-    """Extract task-level name from a query task_id ('task/task-N' → 'task')."""
+    """Extract task-level name from a query task_id ('task/task-N' -> 'task')."""
     return Path(task_id).parts[0]
 
 
@@ -755,7 +755,7 @@ def hyper_eval(
         f"(build_workers={build_workers})..."
     )
 
-    tag_map: dict[str, str] = {}   # task_name → image tag
+    tag_map: dict[str, str] = {}   # task_name -> image tag
     build_errors: dict[str, str] = {}
 
     def _build_and_record(task_name: str) -> None:
@@ -902,7 +902,7 @@ def _ensure_skill_paths(skill_paths: list[Path | None], task_ids: list[str]) -> 
 # ── Metrics pipeline ──────────────────────────────────────────────────────────
 
 def _to_parent_tasks(task_ids: list[str]) -> list[str]:
-    """Extract unique task-level names from query task_ids ('task/task-N' → 'task')."""
+    """Extract unique task-level names from query task_ids ('task/task-N' -> 'task')."""
     return sorted({_task_name(tid) for tid in task_ids})
 
 
@@ -939,9 +939,9 @@ def _aggregate_csvs(src_paths: list[Path], out_path: Path) -> None:
 #   step 3: per-metric normalization to a comparable 0–100 scale (where applicable)
 #
 # Normalization kinds:
-#   "scale_1_5": LLM rubric scores in [1,5]  → (x-1)/4 * 100  → [0,100]
-#   "ratio":     proportion in [0,1]          → x * 100        → [0,100]
-#   "count":     counts / token totals        → no scaling (raw mean)
+#   "scale_1_5": LLM rubric scores in [1,5]  -> (x-1)/4 * 100  -> [0,100]
+#   "ratio":     proportion in [0,1]          -> x * 100        -> [0,100]
+#   "count":     counts / token totals        -> no scaling (raw mean)
 
 _REPORT_TRAJECTORY_METRICS: dict[str, str] = {
     "pass":                         "ratio",
@@ -1091,7 +1091,7 @@ def _build_skill_coverage_csv(
 def _write_report_csv(
     *, traj_csv: Path, skill_csv: Path, coverage_csv: Path, out_path: Path,
 ) -> None:
-    """Single-row report.csv: task-inner mean → cross-task mean → per-metric normalization."""
+    """Single-row report.csv: task-inner mean -> cross-task mean -> per-metric normalization."""
     import csv
 
     traj_keys     = list(_REPORT_TRAJECTORY_METRICS.keys())
@@ -1136,16 +1136,16 @@ def _run_metrics_pipeline(
     """Run trajectory and skill metrics per skill_path after agent trials complete.
 
     For each skill_path (config key = skill_path.name, or 'no_skill' when None):
-      Step 1: Trajectory metrics (per task) → evaluation_reports/<config>/<task>/<task>-trajectory-results.csv
-              Then aggregate all tasks → evaluation_reports/<config>/trajectory-evaluation.csv
-      Step 2: Skill metrics JSON (per subtask) → evaluation_reports/<config>/<task>/<subtask>/*.metrics.json
+      Step 1: Trajectory metrics (per task) -> evaluation_reports/<config>/<task>/<task>-trajectory-results.csv
+              Then aggregate all tasks -> evaluation_reports/<config>/trajectory-evaluation.csv
+      Step 2: Skill metrics JSON (per subtask) -> evaluation_reports/<config>/<task>/<subtask>/*.metrics.json
               (executability, safety, key_points — skipped for no_skill)
-      Step 3: Skill metrics CSVs (per task) → evaluation_reports/<config>/<task>/<task>-skills-results.csv
-              Then aggregate all tasks →
+      Step 3: Skill metrics CSVs (per task) -> evaluation_reports/<config>/<task>/<task>-skills-results.csv
+              Then aggregate all tasks ->
                 evaluation_reports/<config>/skill-quality-evaluation.csv   (executability + safety, per query × skill)
                 evaluation_reports/<config>/skill-coverage-evaluation.csv  (coverage,            per query × run)
       Final:  evaluation_reports/<config>/report.csv  — single-row summary
-              (task-inner mean → cross-task mean → per-metric normalization)
+              (task-inner mean -> cross-task mean -> per-metric normalization)
     """
     parent_tasks = _to_parent_tasks(task_ids)
     if not parent_tasks:
@@ -1212,7 +1212,7 @@ def _run_metrics_pipeline(
         agg_traj = reports_dir / config / "trajectory-evaluation.csv"
         if not dry_run:
             _aggregate_csvs(traj_task_csvs, agg_traj)
-            print(f"  → aggregated: {agg_traj}")
+            print(f"  -> aggregated: {agg_traj}")
 
         if config == "no_skill":
             # no skill files to evaluate
@@ -1266,7 +1266,7 @@ def _run_metrics_pipeline(
         agg_skills = reports_dir / config / "skill-quality-evaluation.csv"
         if not dry_run:
             _aggregate_csvs(skills_task_csvs, agg_skills)
-            print(f"  → aggregated: {agg_skills}")
+            print(f"  -> aggregated: {agg_skills}")
 
         # ── Skill coverage CSV (per query × run) ────────────────────────────────
         # compute_coverage.py runs per query, so coverage is at query granularity
@@ -1276,10 +1276,10 @@ def _run_metrics_pipeline(
         agg_coverage = reports_dir / config / "skill-coverage-evaluation.csv"
         if not dry_run:
             out = _build_skill_coverage_csv(config, active_tasks, reports_dir)
-            print(f"  → aggregated: {out}")
+            print(f"  -> aggregated: {out}")
 
         # ── Final report.csv ────────────────────────────────────────────────────
-        # Task-inner mean → cross-task mean → per-metric normalization.
+        # Task-inner mean -> cross-task mean -> per-metric normalization.
         report_csv = reports_dir / config / "report.csv"
         if not dry_run:
             _write_report_csv(
@@ -1288,10 +1288,10 @@ def _run_metrics_pipeline(
                 coverage_csv=agg_coverage,
                 out_path=report_csv,
             )
-            print(f"  → report:      {report_csv}")
+            print(f"  -> report:      {report_csv}")
 
     print(f"\n{'='*60}")
-    print(f"Metrics complete. Reports → {reports_dir}")
+    print(f"Metrics complete. Reports -> {reports_dir}")
     print(f"{'='*60}\n")
 
 

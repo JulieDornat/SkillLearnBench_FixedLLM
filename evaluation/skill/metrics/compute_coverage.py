@@ -183,14 +183,21 @@ def _resolve_generated_roots(
 
 
 def _call_llm(prompt: str, model: str) -> str:
-    if not os.environ.get("OPENAI_API_KEY"):
-        raise RuntimeError("No API key found (set OPENAI_API_KEY)")
     try:
         from openai import OpenAI
     except ImportError as exc:
         raise RuntimeError("openai client not installed") from exc
+    
+    if os.environ.get("GROQ_API_KEY"):
+        client = OpenAI(
+            api_key=os.environ["GROQ_API_KEY"],
+            base_url="https://api.groq.com/openai/v1",
+        )
+    elif os.environ.get("OPENAI_API_KEY"):
+        client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
+    else:
+        raise RuntimeError("No API key found (set OPENAI_API_KEY or GROQ_API_KEY)")
 
-    client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
     try:
         resp = client.responses.create(
             model=model,
@@ -388,7 +395,7 @@ def main() -> int:
         type=Path,
         help="Output path; default: results/<task-id>/key_points.metrics.json",
     )
-    parser.add_argument("--model", default="gpt-5-mini", help="OpenAI model name")
+    parser.add_argument("--model", default="openai/gpt-oss-120b", help="OpenAI model name")
     parser.add_argument("--raw-dir", type=Path, help="Optional dir to save per-key-point raw LLM outputs")
     parser.add_argument("--task-dir", type=Path, help="Override task directory (contains instruction.md)")
     parser.add_argument("--skill-configs-dir", type=Path, help="Override skill configs directory (contains human_authored/, <config>/)")
